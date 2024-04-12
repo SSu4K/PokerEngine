@@ -3,14 +3,11 @@ from pokerkit import *
 from player import Player
 
 class PokerConfig:
-    def __init__(self, array):
-        self.ante = array[0]
-        self.small_blind = array[1]
-        self.big_blind = array[2]
-        self.player_count = array[3]
-
     def __init__(self, ante, small_blind, big_blind, player_count):
-        self.__init__([ante, small_blind, big_blind, player_count])
+        self.ante = ante
+        self.small_blind = small_blind
+        self.big_blind = big_blind
+        self.player_count = player_count
 
 class GamePhase(Enum):
     POSTING_ANTE = "POSTING_ANTES"
@@ -27,7 +24,7 @@ class GamePhase(Enum):
 class PokerEngine:
     def __init__(self):
         self.running = False
-        self.config = PokerConfig([500, 1000, 2000, 3])
+        self.config = PokerConfig(500, 1000, 2000, 3)
         self.players = []
         self.game_phase = None
 
