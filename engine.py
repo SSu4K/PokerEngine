@@ -1,6 +1,7 @@
 from enum import Enum
 from pokerkit import *
 from player import Player
+from move import *
 
 class PokerConfig:
     def __init__(self, ante, small_blind, big_blind, player_count):
@@ -73,12 +74,17 @@ class PokerEngine:
     def get_whose_turn(self):
         return self.poker_state.actor_index
     
+    def update_money(self):
+        for [player, stack] in zip(self.players, self.poker_state.stacks):
+            player.money = stack
+
     def game_step(self, move=None):
         
         if(self.poker_state.status):
             self.running = True
         else:
             self.running = False
+            return
 
         if self.poker_state.can_post_ante():
             self.game_phase = GamePhase.POSTING_ANTE
@@ -87,6 +93,7 @@ class PokerEngine:
         elif self.poker_state.can_collect_bets():
             self.game_phase = GamePhase.COLLECTING_BET
             self.poker_state.collect_bets()
+            self.update_money()
 
         elif self.poker_state.can_post_blind_or_straddle():
             self.game_phase = GamePhase.POSTING_BLIND
@@ -119,15 +126,24 @@ class PokerEngine:
         else:
             self.game_phase = GamePhase.WAITING_MOVE
             if(move != None):
-                self.poker_state.check_or_call()
-    
+                if(move.type == MoveType.CALL or move.type == MoveType.CHECK):
+                    self.poker_state.check_or_call()
+                elif(move.type == MoveType.FOLD):
+                    self.poker_state.fold()
+                elif(move.type == MoveType.BET or move.type == MoveType.RAISE):
+                    self.poker_state.complete_bet_or_raise_to(move.value)
+
     def get_game_state(self):
         return {
             "config": vars(self.config),
             "players": self.players,
+            
+            "phase": self.game_phase.value,
             "turn": self.poker_state.actor_index,
-            "dealer": self.poker_state.hole_dealee_index,
+            
             "hands": self.poker_state.hole_cards,
             "board": self.poker_state.board_cards,
+            
+            "stacks": self.poker_state.stacks,
             "bets": self.poker_state.bets
         }
