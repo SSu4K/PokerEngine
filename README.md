@@ -1,4 +1,4 @@
-# PokerEngine
+# Poker Engine
 A Texas Hold'em Poker enigine. Intended for future use in online poker game. Utilizes the pokerkit package.
 The code enables runnung a full poker game and retrieving the *gamestate* at each step of the game.
 
