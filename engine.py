@@ -3,12 +3,14 @@ from pokerkit import *
 from player import Player
 from move import *
 
+
 class PokerConfig:
     def __init__(self, ante, small_blind, big_blind, player_count):
         self.ante = ante
         self.small_blind = small_blind
         self.big_blind = big_blind
         self.player_count = player_count
+
 
 class GamePhase(Enum):
     POSTING_ANTE = "POSTING_ANTES"
@@ -21,6 +23,7 @@ class GamePhase(Enum):
     PUSHING_CHIPS = "PUSHING_CHIPS"
     PULLING_CHIPS = "PULLING_CHIPS"
     WAITING_MOVE = "WAITING_MOVE"
+
 
 class PokerEngine:
     def __init__(self):
@@ -36,22 +39,22 @@ class PokerEngine:
             True,  # Uniform antes?
             self.config.ante,
             (self.config.small_blind, self.config.big_blind),
-            self.config.big_blind, # Min bet
+            self.config.big_blind,  # Min bet
             (1125600, 2000000, 553500),  # Starting stacks
             self.config.player_count,  # Number of players
         )
-    
+
     def set_config(self, config):
         self.config = config
 
     def add_player(self, player):
-        if(self.running == True):
+        if (self.running == True):
             return
-        if(len(self.players) < self.config.player_count):
+        if (len(self.players) < self.config.player_count):
             self.players.append(player)
 
     def remove_player(self, index):
-        if(self.running == True):
+        if (self.running == True):
             return
         self.players.remove(index)
 
@@ -66,21 +69,29 @@ class PokerEngine:
             True,  # Uniform antes?
             self.config.ante,
             (self.config.small_blind, self.config.big_blind),
-            self.config.big_blind, # Min bet
+            self.config.big_blind,  # Min bet
             stacks,  # Starting stacks
             self.config.player_count,  # Number of players
         )
 
     def get_whose_turn(self):
         return self.poker_state.actor_index
-    
+
     def update_money(self):
         for [player, stack] in zip(self.players, self.poker_state.stacks):
             player.money = stack
 
+    def make_move(self, move):
+        if (move.type == MoveType.CALL or move.type == MoveType.CHECK):
+            self.poker_state.check_or_call()
+        elif (move.type == MoveType.FOLD):
+            self.poker_state.fold()
+        elif (move.type == MoveType.BET or move.type == MoveType.RAISE):
+            self.poker_state.complete_bet_or_raise_to(move.value)
+
     def game_step(self, move=None):
-        
-        if(self.poker_state.status):
+
+        if (self.poker_state.status):
             self.running = True
         else:
             self.running = False
@@ -125,25 +136,20 @@ class PokerEngine:
 
         else:
             self.game_phase = GamePhase.WAITING_MOVE
-            if(move != None):
-                if(move.type == MoveType.CALL or move.type == MoveType.CHECK):
-                    self.poker_state.check_or_call()
-                elif(move.type == MoveType.FOLD):
-                    self.poker_state.fold()
-                elif(move.type == MoveType.BET or move.type == MoveType.RAISE):
-                    self.poker_state.complete_bet_or_raise_to(move.value)
+            if (move != None):
+                self.make_move(move)
 
     def get_game_state(self):
         return {
             "config": vars(self.config),
             "players": self.players,
-            
+
             "phase": self.game_phase.value,
             "turn": self.poker_state.actor_index,
-            
+
             "hands": self.poker_state.hole_cards,
             "board": self.poker_state.board_cards,
-            
+
             "stacks": self.poker_state.stacks,
             "bets": self.poker_state.bets
         }
