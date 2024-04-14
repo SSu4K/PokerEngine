@@ -141,15 +141,15 @@ class PokerEngine:
 
     def get_game_state(self):
         return {
-            "config": vars(self.config),
-            "players": self.players,
+            "config": vars(self.config),            # dict of config {ante, small_blind, big_blind, player_count}
+            "players": self.players,                # list of players
 
-            "phase": self.game_phase.value,
-            "turn": self.poker_state.actor_index,
+            "phase": self.game_phase.value,         # game phase as str (GamePhase)
+            "turn": self.poker_state.actor_index,   # index of active player
 
-            "hands": self.poker_state.hole_cards,
-            "board": self.poker_state.board_cards,
+            "hands": self.poker_state.hole_cards,   # list of player hands
+            "board": self.poker_state.board_cards,  # list of cards on the table
 
-            "stacks": self.poker_state.stacks,
-            "bets": self.poker_state.bets
+            "stacks": self.poker_state.stacks,      # list of players money stacks
+            "bets": self.poker_state.bets           # list of players bets
         }
