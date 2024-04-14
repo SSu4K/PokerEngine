@@ -1,19 +1,17 @@
 # Poker Engine
 A Texas Hold'em Poker enigine. Intended for future use in online poker game. Utilizes the pokerkit package.
-The code enables runnung a full poker game and retrieving the *gamestate* at each step of the game.
+The code enables runnung a full poker game and retrieving the ***gamestate*** at each step of the game.
 
+### Requirements:
+- Python 3.11 or higher
+- [PokerKit library](https://pypi.org/project/pokerkit/0.0.2/)
 
 ### Example use:
 ```python
-'''
-test.py
-Poker engine test program
-'''
-
 from engine import *
 
 config = PokerConfig(500, 1000, 2000, 3)
-players = [Player("Szymon", 10000), Player("Karol", 10000), Player("Jezy", 10000)]
+players = [Player("Ricky", 10000), Player("Julian", 10000), Player("John", 10000)]
 
 engine = PokerEngine()
 engine.set_config(config)
