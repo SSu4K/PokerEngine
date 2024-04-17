@@ -3,7 +3,6 @@ from pokerkit import *
 from player import Player
 from move import *
 
-
 class PokerConfig:
     def __init__(self, ante, small_blind, big_blind, player_count):
         self.ante = ante
@@ -13,17 +12,19 @@ class PokerConfig:
 
 
 class GamePhase(Enum):
-    POSTING_ANTE = "POSTING_ANTES"
-    COLLECTING_BET = "COLLECTING_BETS"
-    POSTING_BLIND = "POSTING_BLIND"
-    BURNING_CARD = "BURNING_CARD"
-    DEALING_HOLE = "DEALING_HOLE"
-    DEALING_BOARD = "DEALING_BOARD"
-    KILLING_HAND = "KILLING_HAND"
-    PUSHING_CHIPS = "PUSHING_CHIPS"
-    PULLING_CHIPS = "PULLING_CHIPS"
-    WAITING_MOVE = "WAITING_MOVE"
+    POSTING_ANTE    = "POSTING_ANTES"
+    COLLECTING_BET  = "COLLECTING_BETS"
+    POSTING_BLIND   = "POSTING_BLIND"
+    BURNING_CARD    = "BURNING_CARD"
+    DEALING_HOLE    = "DEALING_HOLE"
+    DEALING_BOARD   = "DEALING_BOARD"
+    KILLING_HAND    = "KILLING_HAND"
+    PUSHING_CHIPS   = "PUSHING_CHIPS"
+    PULLING_CHIPS   = "PULLING_CHIPS"
+    WAITING_MOVE    = "WAITING_MOVE"
 
+def get_card_list(cards):
+        return [card.suit+card.rank for card in cards]
 
 class PokerEngine:
     def __init__(self):
@@ -142,13 +143,13 @@ class PokerEngine:
     def get_game_state(self):
         return {
             "config": vars(self.config),            # dict of config {ante, small_blind, big_blind, player_count}
-            "players": self.players,                # list of players
+            "players": [vars(player) for player in self.players],                # list of players
 
             "phase": self.game_phase.value,         # game phase as str (GamePhase)
             "turn": self.poker_state.actor_index,   # index of active player
 
-            "hands": self.poker_state.hole_cards,   # list of player hands
-            "board": self.poker_state.board_cards,  # list of cards on the table
+            "hands": [get_card_list(cards) for cards in self.poker_state.hole_cards],   # list of player hands
+            "board": get_card_list(self.poker_state.board_cards),  # list of cards on the table
 
             "stacks": self.poker_state.stacks,      # list of players money stacks
             "bets": self.poker_state.bets           # list of players bets
