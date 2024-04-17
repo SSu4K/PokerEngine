@@ -2,6 +2,7 @@ from enum import Enum
 from pokerkit import *
 from player import Player
 from move import *
+import time
 
 class PokerConfig:
     def __init__(self, ante, small_blind, big_blind, player_count):
@@ -32,6 +33,7 @@ class PokerEngine:
         self.config = PokerConfig(500, 1000, 2000, 3)
         self.players = []
         self.game_phase = None
+        self.timestamp = None
 
         self.poker_state = NoLimitTexasHoldem.create_state(
             # Automations
@@ -98,6 +100,7 @@ class PokerEngine:
             self.running = False
             return
 
+        self.timestamp = time.time()
         if self.poker_state.can_post_ante():
             self.game_phase = GamePhase.POSTING_ANTE
             self.poker_state.post_ante()
@@ -142,6 +145,7 @@ class PokerEngine:
 
     def get_game_state(self):
         return {
+            "timestamp": self.timestamp,
             "config": vars(self.config),            # dict of config {ante, small_blind, big_blind, player_count}
             "players": [vars(player) for player in self.players],                # list of players
 
