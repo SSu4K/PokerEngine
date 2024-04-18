@@ -23,6 +23,7 @@ class GamePhase(Enum):
     PUSHING_CHIPS   = "PUSHING_CHIPS"
     PULLING_CHIPS   = "PULLING_CHIPS"
     WAITING_MOVE    = "WAITING_MOVE"
+    MAKING_MOVE     = "MAKING_MOVE"
 
 def get_card_list(cards):
         return [card.suit+card.rank for card in cards]
@@ -92,6 +93,10 @@ class PokerEngine:
         elif (move.type == MoveType.BET or move.type == MoveType.RAISE):
             self.poker_state.complete_bet_or_raise_to(move.value)
 
+    def set_game_phase(self, phase):
+        self.timestamp = time.time()
+        self.game_phase = phase
+
     def game_step(self, move=None):
 
         if (self.poker_state.status):
@@ -100,47 +105,47 @@ class PokerEngine:
             self.running = False
             return
 
-        self.timestamp = time.time()
         if self.poker_state.can_post_ante():
-            self.game_phase = GamePhase.POSTING_ANTE
+            self.set_game_phase(GamePhase.POSTING_ANTE)
             self.poker_state.post_ante()
 
         elif self.poker_state.can_collect_bets():
-            self.game_phase = GamePhase.COLLECTING_BET
+            self.set_game_phase(GamePhase.COLLECTING_BET)
             self.poker_state.collect_bets()
             self.update_money()
 
         elif self.poker_state.can_post_blind_or_straddle():
-            self.game_phase = GamePhase.POSTING_BLIND
+            self.set_game_phase(GamePhase.POSTING_BLIND)
             self.poker_state.post_blind_or_straddle()
 
         elif self.poker_state.can_burn_card():
-            self.game_phase = GamePhase.BURNING_CARD
+            self.set_game_phase(GamePhase.BURNING_CARD)
             self.poker_state.burn_card('??')
 
         elif self.poker_state.can_deal_hole():
-            self.game_phase = GamePhase.DEALING_HOLE
+            self.set_game_phase(GamePhase.DEALING_HOLE)
             self.poker_state.deal_hole()
 
         elif self.poker_state.can_deal_board():
-            self.game_phase = GamePhase.DEALING_BOARD
+            self.set_game_phase(GamePhase.DEALING_BOARD)
             self.poker_state.deal_board()
 
         elif self.poker_state.can_kill_hand():
-            self.game_phase = GamePhase.KILLING_HAND
+            self.set_game_phase(GamePhase.KILLING_HAND)
             self.poker_state.kill_hand()
 
         elif self.poker_state.can_push_chips():
-            self.game_phase = GamePhase.PUSHING_CHIPS
+            self.set_game_phase(GamePhase.PUSHING_CHIPS)
             self.poker_state.push_chips()
 
         elif self.poker_state.can_pull_chips():
-            self.game_phase = GamePhase.PULLING_CHIPS
+            self.set_game_phase(GamePhase.PULLING_CHIPS)
             self.poker_state.pull_chips()
 
         else:
-            self.game_phase = GamePhase.WAITING_MOVE
+            self.set_game_phase(GamePhase.WAITING_MOVE)
             if (move != None):
+                self.set_game_phase(GamePhase.MAKING_MOVE)
                 self.make_move(move)
 
     def get_game_state(self):
