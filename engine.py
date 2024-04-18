@@ -35,6 +35,9 @@ class PokerEngine:
         self.players = []
         self.game_phase = None
         self.timestamp = None
+        
+        self.__game_state_log = []
+        self.logging = False
 
         self.poker_state = NoLimitTexasHoldem.create_state(
             # Automations
@@ -64,6 +67,7 @@ class PokerEngine:
 
     def reset(self):
 
+        self.__game_state_log = []
         stacks = (player.money for player in self.players)
 
         self.poker_state = NoLimitTexasHoldem.create_state(
@@ -77,6 +81,12 @@ class PokerEngine:
             stacks,  # Starting stacks
             self.config.player_count,  # Number of players
         )
+
+    def get_log(self):
+        if(self.logging):
+            return self.__game_state_log
+        else:
+            return None
 
     def get_whose_turn(self):
         return self.poker_state.actor_index
@@ -147,6 +157,9 @@ class PokerEngine:
             if (move != None):
                 self.set_game_phase(GamePhase.MAKING_MOVE)
                 self.make_move(move)
+
+        if(self.logging):
+            self.__game_state_log.append(self.get_game_state())
 
     def get_game_state(self):
         return {
