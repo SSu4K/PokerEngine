@@ -1,7 +1,7 @@
 from enum import Enum
 from pokerkit import *
-from player import Player
-from move import *
+from .player import Player
+from .move import *
 import time
 
 class PokerConfig:
