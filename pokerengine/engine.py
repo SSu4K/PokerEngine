@@ -101,7 +101,8 @@ class PokerEngine:
         elif (move.type == MoveType.FOLD):
             self.poker_state.fold()
         elif (move.type == MoveType.BET or move.type == MoveType.RAISE):
-            self.poker_state.complete_bet_or_raise_to(move.value)
+            value = max(self.poker_state.bets) + move.value
+            self.poker_state.complete_bet_or_raise_to(value)
 
     def set_game_phase(self, phase):
         self.timestamp = time.time()
