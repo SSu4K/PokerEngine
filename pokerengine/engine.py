@@ -26,7 +26,14 @@ class GamePhase(Enum):
     MAKING_MOVE     = "MAKING_MOVE"
 
 def get_card_list(cards):
-        return [card.suit+card.rank for card in cards]
+    if not cards:
+        return []
+    flat_cards = (
+        [card for sublist in cards for card in sublist]
+        if isinstance(cards[0], list)
+        else cards
+    )
+    return [card.suit + card.rank for card in flat_cards]
 
 class PokerEngine:
     def __init__(self):
@@ -97,11 +104,17 @@ class PokerEngine:
 
     def make_move(self, move):
         if (move.type == MoveType.CALL or move.type == MoveType.CHECK):
-            self.poker_state.check_or_call()
+            if self.poker_state.can_check_or_call():
+                self.set_game_phase(GamePhase.MAKING_MOVE)
+                self.poker_state.check_or_call()
         elif (move.type == MoveType.FOLD):
-            self.poker_state.fold()
+            if self.poker_state.can_fold():
+                self.set_game_phase(GamePhase.MAKING_MOVE)
+                self.poker_state.fold()
         elif (move.type == MoveType.BET or move.type == MoveType.RAISE):
-            self.poker_state.complete_bet_or_raise_to(move.value)
+            if self.poker_state.can_complete_bet_or_raise_to(move.value):
+                self.set_game_phase(GamePhase.MAKING_MOVE)
+                self.poker_state.complete_bet_or_raise_to(move.value)
 
     def set_game_phase(self, phase):
         self.timestamp = time.time()
@@ -155,7 +168,6 @@ class PokerEngine:
         else:
             self.set_game_phase(GamePhase.WAITING_MOVE)
             if (move != None):
-                self.set_game_phase(GamePhase.MAKING_MOVE)
                 self.make_move(move)
 
         if(self.logging):
