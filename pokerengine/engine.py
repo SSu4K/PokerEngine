@@ -37,6 +37,11 @@ def get_card_list(cards):
     )
     return [card.suit + card.rank for card in flat_cards]
 
+def rotate_list(list, step):
+    if step == 0:
+        return list
+    return list[step:] + list[:step]
+
 class PokerEngine:
     def __init__(self, config):
         self.running = False
@@ -68,7 +73,8 @@ class PokerEngine:
     def reset(self):
         assert len(self.players) == self.config.player_count
         self.__game_state_log = []
-        stacks = (player.money for player in self.players)
+        stacks = [player.money for player in self.players]
+        stacks = rotate_list(stacks, self.dealer)
         self.poker_state = NoLimitTexasHoldem.create_state(
             # Automations
             (
@@ -82,9 +88,6 @@ class PokerEngine:
             self.config.player_count,  # Number of players
         )
         self.running = True
-        print("RETTING! dealer: ", self.dealer)
-        self.poker_state.actor_indices.rotate(self.dealer)
-        #self.poker_state.ac
 
     def next_hand(self):
 
@@ -182,19 +185,26 @@ class PokerEngine:
 
     def get_game_state(self):
      
+        players = rotate_list([vars(player) for player in self.players], -self.dealer)
+        hands = rotate_list([get_card_list(cards) for cards in self.poker_state.hole_cards], -self.dealer)
+        stacks = rotate_list(list(self.poker_state.stacks), -self.dealer)
+        bets = rotate_list(list(self.poker_state.bets), -self.dealer)
+        turn = self.poker_state.actor_index
+        if turn != None:
+            turn = (turn+self.dealer)%len(players)
         return {
             "timestamp": self.timestamp,
             "config": vars(self.config),            # dict of config {ante, small_blind, big_blind, player_count}
-            "players": [vars(player) for player in self.players],                # list of players
+            "players": players,                # list of players
 
             "phase": self.game_phase.value,         # game phase as str (GamePhase)
-            "turn": self.poker_state.actor_index,   # index of active player
+            "turn": turn,   # index of active player
 
-            "hands": [get_card_list(cards) for cards in self.poker_state.hole_cards],   # list of player hands
+            "hands": hands,   # list of player hands
             "board": get_card_list(self.poker_state.board_cards),  # list of cards on the table
 
-            "stacks": self.poker_state.stacks,      # list of players money stacks
-            "bets": self.poker_state.bets,          # list of players bets
+            "stacks": stacks,      # list of players money stacks
+            "bets": bets,          # list of players bets
             "pot": self.poker_state.total_pot_amount,
             "min_bet": self.poker_state.min_completion_betting_or_raising_to_amount,
             "max_bet": self.poker_state.max_completion_betting_or_raising_to_amount
