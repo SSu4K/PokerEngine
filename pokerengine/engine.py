@@ -11,6 +11,8 @@ class PokerConfig:
         self.big_blind = big_blind
         self.player_count = player_count
 
+        self.dealer = 0
+
 
 class GamePhase(Enum):
     POSTING_ANTE    = "POSTING_ANTES"
@@ -36,27 +38,18 @@ def get_card_list(cards):
     return [card.suit + card.rank for card in flat_cards]
 
 class PokerEngine:
-    def __init__(self):
+    def __init__(self, config):
         self.running = False
-        self.config = PokerConfig(500, 1000, 2000, 3)
+        self.config = config
         self.players = []
+        self.dealer = 0
         self.game_phase = None
         self.timestamp = None
         
         self.__game_state_log = []
         self.logging = False
 
-        self.poker_state = NoLimitTexasHoldem.create_state(
-            # Automations
-            (
-            ),
-            True,  # Uniform antes?
-            self.config.ante,
-            (self.config.small_blind, self.config.big_blind),
-            self.config.big_blind,  # Min bet
-            (1125600, 2000000, 553500),  # Starting stacks
-            self.config.player_count,  # Number of players
-        )
+        self.poker_state = None
 
     def set_config(self, config):
         self.config = config
@@ -73,13 +66,13 @@ class PokerEngine:
         self.players.remove(index)
 
     def reset(self):
-
+        assert len(self.players) == self.config.player_count
         self.__game_state_log = []
         stacks = (player.money for player in self.players)
-
         self.poker_state = NoLimitTexasHoldem.create_state(
             # Automations
             (
+                Automation.HOLE_CARDS_SHOWING_OR_MUCKING
             ),
             True,  # Uniform antes?
             self.config.ante,
@@ -88,6 +81,15 @@ class PokerEngine:
             stacks,  # Starting stacks
             self.config.player_count,  # Number of players
         )
+        self.running = True
+        print("RETTING! dealer: ", self.dealer)
+        self.poker_state.actor_indices.rotate(self.dealer)
+        #self.poker_state.ac
+
+    def next_hand(self):
+
+        self.dealer = (self.dealer+1) % self.config.player_count
+        self.reset()
 
     def get_log(self):
         if(self.logging):
@@ -135,7 +137,6 @@ class PokerEngine:
         elif self.poker_state.can_collect_bets():
             self.set_game_phase(GamePhase.COLLECTING_BET)
             self.poker_state.collect_bets()
-            self.update_money()
 
         elif self.poker_state.can_post_blind_or_straddle():
             self.set_game_phase(GamePhase.POSTING_BLIND)
@@ -161,15 +162,21 @@ class PokerEngine:
             self.set_game_phase(GamePhase.PUSHING_CHIPS)
             self.poker_state.push_chips()
 
-        elif self.poker_state.can_pull_chips():
+        elif self.poker_state.can_pull_chips(self.poker_state.actor_index):
             self.set_game_phase(GamePhase.PULLING_CHIPS)
             self.poker_state.pull_chips()
-
-        else:
+            self.update_money()
+            self.next_hand()
+        
+        elif self.poker_state.actor_index != None:
             self.set_game_phase(GamePhase.WAITING_MOVE)
             if (move != None):
                 self.make_move(move)
 
+        else:
+            self.running = False
+            print("Game shite!")
+            #self.poker_state.pull_chips()
         if(self.logging):
             self.__game_state_log.append(self.get_game_state())
 
