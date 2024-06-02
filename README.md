@@ -13,8 +13,7 @@ from engine import *
 config = PokerConfig(500, 1000, 2000, 3)
 players = [Player("Ricky", 10000), Player("Julian", 10000), Player("John", 10000)]
 
-engine = PokerEngine()
-engine.set_config(config)
+engine = PokerEngine(config)
 
 for player in players:
     engine.add_player(player)
