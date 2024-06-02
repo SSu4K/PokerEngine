@@ -15,6 +15,7 @@ class PokerConfig:
 
 
 class GamePhase(Enum):
+    HAND_BEGIN      = "HAND_BEGIN"
     POSTING_ANTE    = "POSTING_ANTES"
     COLLECTING_BET  = "COLLECTING_BETS"
     POSTING_BLIND   = "POSTING_BLIND"
@@ -26,6 +27,9 @@ class GamePhase(Enum):
     PULLING_CHIPS   = "PULLING_CHIPS"
     WAITING_MOVE    = "WAITING_MOVE"
     MAKING_MOVE     = "MAKING_MOVE"
+    SHOWDOWN        = "SHOWDOWN"
+    HAND_END        = "HAND_END"
+
 
 def get_card_list(cards):
     if not cards:
@@ -88,9 +92,9 @@ class PokerEngine:
             self.config.player_count,  # Number of players
         )
         self.running = True
+        self.game_phase = GamePhase.HAND_BEGIN
 
     def next_hand(self):
-
         self.dealer = (self.dealer+1) % self.config.player_count
         self.reset()
 
@@ -165,12 +169,14 @@ class PokerEngine:
             self.set_game_phase(GamePhase.PUSHING_CHIPS)
             self.poker_state.push_chips()
 
+        elif self.poker_state.can_show_or_muck_hole_cards():
+            self.set_game_phase(GamePhase.SHOWDOWN)
+            self.poker_state.show_or_muck_hole_cards()
+
         elif self.poker_state.can_pull_chips(self.poker_state.actor_index):
             self.set_game_phase(GamePhase.PULLING_CHIPS)
             self.poker_state.pull_chips()
-            self.update_money()
-            self.next_hand()
-        
+
         elif self.poker_state.actor_index != None:
             self.set_game_phase(GamePhase.WAITING_MOVE)
             if (move != None):
@@ -178,8 +184,10 @@ class PokerEngine:
 
         else:
             self.running = False
-            print("Game shite!")
-            #self.poker_state.pull_chips()
+            self.set_game_phase(GamePhase.HAND_END)
+            self.update_money()
+            self.next_hand()
+
         if(self.logging):
             self.__game_state_log.append(self.get_game_state())
 
