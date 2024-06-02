@@ -82,7 +82,7 @@ class PokerEngine:
         self.poker_state = NoLimitTexasHoldem.create_state(
             # Automations
             (
-                Automation.HOLE_CARDS_SHOWING_OR_MUCKING
+                #Automation.HOLE_CARDS_SHOWING_OR_MUCKING
             ),
             True,  # Uniform antes?
             self.config.ante,
@@ -194,7 +194,6 @@ class PokerEngine:
 
     def get_game_state(self):
      
-        #players = rotate_list([vars(player) for player in self.players], -self.dealer)
         players = [vars(player) for player in self.players]
         hands = rotate_list([get_card_list(cards) for cards in self.poker_state.hole_cards], -self.dealer)
         stacks = rotate_list(list(self.poker_state.stacks), -self.dealer)
@@ -209,6 +208,7 @@ class PokerEngine:
 
             "phase": self.game_phase.value,         # game phase as str (GamePhase)
             "turn": turn,   # index of active player
+            "dealer": self.dealer,
 
             "hands": hands,   # list of player hands
             "board": get_card_list(self.poker_state.board_cards),  # list of cards on the table
