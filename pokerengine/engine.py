@@ -108,7 +108,8 @@ class PokerEngine:
         return self.poker_state.actor_index
 
     def update_money(self):
-        for [player, stack] in zip(self.players, self.poker_state.stacks):
+        stacks = rotate_list(self.poker_state.stacks, -self.dealer)
+        for [player, stack] in zip(self.players, stacks):
             player.money = stack
 
     def make_move(self, move):
@@ -135,6 +136,8 @@ class PokerEngine:
             self.running = True
         else:
             self.running = False
+            self.set_game_phase(GamePhase.HAND_END)
+            self.update_money()
             return
 
         if self.poker_state.can_post_ante():
@@ -184,16 +187,15 @@ class PokerEngine:
 
         else:
             self.running = False
-            self.set_game_phase(GamePhase.HAND_END)
-            self.update_money()
-            self.next_hand()
+            print("No legal moves but status == True. Hand terminated.")
 
         if(self.logging):
             self.__game_state_log.append(self.get_game_state())
 
     def get_game_state(self):
      
-        players = rotate_list([vars(player) for player in self.players], -self.dealer)
+        #players = rotate_list([vars(player) for player in self.players], -self.dealer)
+        players = [vars(player) for player in self.players]
         hands = rotate_list([get_card_list(cards) for cards in self.poker_state.hole_cards], -self.dealer)
         stacks = rotate_list(list(self.poker_state.stacks), -self.dealer)
         bets = rotate_list(list(self.poker_state.bets), -self.dealer)
